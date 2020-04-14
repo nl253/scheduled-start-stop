@@ -1,0 +1,42 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: An AWS Serverless Specification template describing your function.
+Parameters:
+  CronSpec:
+    Type: String
+    Default: cron(0 * * * ? *)
+  FuncRuntime:
+    Type: String
+    Default: nodejs12.x
+  FuncRoleName:
+    Type: String
+    Default: start-stop-ec2
+  FuncTimeout:
+    Type: Number
+    Default: 30
+  FuncMemory:
+    MinValue: 128
+    Type: Number
+    Default: 128
+  FuncTracing:
+    Type: String
+    Default: Active
+Resources:
+  startstoplinux:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: index.handler
+      Runtime: !Ref FuncRuntime
+      CodeUri: .
+      Description: 'Lambda function that starts or stops the linux VM based on time.'
+      MemorySize: !Ref FuncMemory
+      Timeout: !Ref FuncTimeout
+      Role: !Sub 'arn:aws:iam::${AWS::AccountId}:role/service-role/${FuncRoleName}'
+      Events:
+        Schedule1:
+          Type: Schedule
+          Properties:
+            Schedule: !Ref CronSpec
+      Tags:
+        start-stop-linux: ''
+      Tracing: !Ref FuncTracing
