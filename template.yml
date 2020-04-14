@@ -5,6 +5,9 @@ Parameters:
   CronSpec:
     Type: String
     Default: 'cron(0 * * * ? *)'
+  SSMParamsPath:
+    Type: String
+    Default: '/lambda/start-stop-linux'
   FuncRuntime:
     Type: String
     Default: nodejs12.x
@@ -22,6 +25,25 @@ Parameters:
     Type: String
     Default: Active
 Resources:
+  StartStopLinuxLambdaRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess
+        - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
+        - arn:aws:iam::aws:policy/AmazonEC2FullAccess
+        - !Sub arn:aws:iam::${AWS::AccountId}:policy/KMSReadOnlyPolicy
+      Tags:
+        - { Key: start-stop-linux, Value: '' }
   StartStopLinuxLambda:
     Type: 'AWS::Serverless::Function'
     Properties:
@@ -31,7 +53,7 @@ Resources:
       Description: 'Lambda function that starts or stops the linux VM based on time.'
       MemorySize: !Ref FuncMemory
       Timeout: !Ref FuncTimeout
-      Role: !Sub 'arn:aws:iam::${AWS::AccountId}:role/service-role/${FuncRoleName}'
+      Role: !GetAtt StartStopLinuxLambdaRole.Arn
       Events:
         Schedule:
           Type: Schedule
@@ -39,4 +61,8 @@ Resources:
             Schedule: !Ref CronSpec
       Tags:
         start-stop-linux: ''
+      Environment:
+        Variables:
+          PARAMS_PATH: !Ref SSMParamsPath
+          REGION: !Sub '${AWS::Region}'
       Tracing: !Ref FuncTracing
