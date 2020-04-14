@@ -4,7 +4,7 @@ Description: An AWS Serverless Specification template describing your function.
 Parameters:
   CronSpec:
     Type: String
-    Default: cron(0 * * * ? *)
+    Default: 'cron(0 * * * ? *)'
   FuncRuntime:
     Type: String
     Default: nodejs12.x
@@ -22,7 +22,7 @@ Parameters:
     Type: String
     Default: Active
 Resources:
-  startstoplinux:
+  StartStopLinuxLambda:
     Type: 'AWS::Serverless::Function'
     Properties:
       Handler: index.handler
@@ -33,7 +33,7 @@ Resources:
       Timeout: !Ref FuncTimeout
       Role: !Sub 'arn:aws:iam::${AWS::AccountId}:role/service-role/${FuncRoleName}'
       Events:
-        Schedule1:
+        Schedule:
           Type: Schedule
           Properties:
             Schedule: !Ref CronSpec
