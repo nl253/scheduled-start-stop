@@ -1,11 +1,6 @@
-const AWS = require('aws-sdk');
-const ec2 = new AWS.EC2();
-const ssm = new AWS.SSM();
-
-/**
- * @type {{HOUR_START: number, HOUR_END: number, INSTANCE_ID: string[], REGION: string}|null}
- */
-let PARAMS = null;
+const { EC2, SSM } = require('aws-sdk');
+const ec2 = new EC2();
+const ssm = new SSM();
 
 /**
  * @return {Promise<{HOUR_START: number, HOUR_END: number, INSTANCE_ID: string[], REGION: string}>}
@@ -24,11 +19,7 @@ const getParams = async () => {
 };
 
 exports.handler = async (_event, _context) => {
-  if (PARAMS === null) {
-    PARAMS = await getParams();
-  }
-
-  const { HOUR_END, INSTANCE_ID, HOUR_START } = PARAMS;
+  const { HOUR_END, INSTANCE_ID, HOUR_START } = await getParams();
 
   const d = new Date();
   const h = d.getUTCHours() + 1;
