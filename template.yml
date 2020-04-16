@@ -59,6 +59,5 @@ Resources:
       Tags:
         personal-vm: '1'
       Environment:
-        Variables:
-          Dummy: '1'
+        Variables: {}
       Tracing: !Ref FuncTracing
