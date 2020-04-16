@@ -5,9 +5,6 @@ Parameters:
   CronSpec:
     Type: String
     Default: 'cron(0 * * * ? *)'
-  SSMParamsPath:
-    Type: String
-    Default: '/lambda/start-stop-linux'
   FuncRuntime:
     Type: String
     Default: nodejs12.x
@@ -43,7 +40,7 @@ Resources:
         - arn:aws:iam::aws:policy/AmazonEC2FullAccess
         - !Sub arn:aws:iam::${AWS::AccountId}:policy/KMSReadOnlyPolicy
       Tags:
-        - { Key: start-stop-linux, Value: '' }
+        - { Key: personal-vm, Value: '1' }
   StartStopLinuxLambda:
     Type: 'AWS::Serverless::Function'
     Properties:
@@ -60,9 +57,8 @@ Resources:
           Properties:
             Schedule: !Ref CronSpec
       Tags:
-        start-stop-linux: ''
+        personal-vm: '1'
       Environment:
         Variables:
-          PARAMS_PATH: !Ref SSMParamsPath
-          REGION: !Sub '${AWS::Region}'
+          Dummy: '1'
       Tracing: !Ref FuncTracing

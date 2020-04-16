@@ -2,9 +2,9 @@ version = 0.1
 [default]
 [default.deploy]
 [default.deploy.parameters]
-stack_name = "start-stop-linux"
-s3_bucket = "serverless-application-model-nl"
-s3_prefix = "start-stop-linux"
+stack_name = "scheduled-start-stop"
+s3_bucket = "codebuild-nl"
+s3_prefix = "scheduled-start-stop-dev"
 region = "eu-west-2"
 confirm_changeset = false
 capabilities = "CAPABILITY_IAM"
