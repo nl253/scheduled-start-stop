@@ -38,6 +38,7 @@ Resources:
         - arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess
         - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
         - arn:aws:iam::aws:policy/AmazonEC2FullAccess
+        - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
         - !Sub arn:aws:iam::${AWS::AccountId}:policy/KMSReadOnlyPolicy
       Tags:
         - { Key: personal-vm, Value: '1' }
