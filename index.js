@@ -2,7 +2,6 @@ const { EC2 } = require('aws-sdk');
 const ec2 = new EC2();
 const TAG_NAME = 'scheduled-start-stop';
 
-
 /**
  * @return {Promise<{tags: Record<string, string>, id: string, state: ("pending"|"running"|"shutting-down"|"terminated"|"stopping"|"stopped")}[]>}
  */

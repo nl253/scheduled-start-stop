@@ -37,7 +37,7 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
         - arn:aws:iam::aws:policy/AmazonEC2FullAccess
-        - arn:aws:iam::aws:policy/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
         - !Sub arn:aws:iam::${AWS::AccountId}:policy/KMSReadOnlyPolicy
       Tags:
         - { Key: personal-vm, Value: '1' }
