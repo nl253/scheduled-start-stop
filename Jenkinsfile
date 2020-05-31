@@ -16,12 +16,14 @@ pipeline {
   }
   stages {
     stage('test') {
-      sh '''
-        apt install -y npm
-        pip3 install awscli --upgrade
-        pip3 install aws-sam-cli --upgrade
-        sam validate
-      '''
+      steps {
+        sh '''
+          apt install -y npm
+          pip3 install awscli --upgrade
+          pip3 install aws-sam-cli --upgrade
+          sam validate
+        '''
+      }
     }
     stage('build') {
       steps {
