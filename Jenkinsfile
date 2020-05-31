@@ -1,5 +1,5 @@
 pipeline {
-  agent { docker { image: 'python:3.8' } }
+  agent { docker { image 'python:3.8' } }
   environment {
     AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID')
     AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
