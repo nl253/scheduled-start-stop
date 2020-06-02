@@ -178,7 +178,7 @@ pipeline {
           zip -r artifacts.zip .
           aws s3 cp --storage-class STANDARD_IA "artifacts.zip" "s3://${CI_BUCKET}/${PROJECT}/${BRANCH_NAME}/${GIT_COMMIT}.zip"
         '''
-        archiveArtifacts artifacts: 'artifacts/**', fingerprint: true, onlyIfSuccessful: true, excludes: 'artifacts/build/*/node_modules/**'
+        archiveArtifacts artifacts: 'artifacts.zip', fingerprint: true, onlyIfSuccessful: true
     }
     cleanup {
         deleteDir() /* clean up our workspace */
