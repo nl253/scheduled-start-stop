@@ -119,7 +119,7 @@ pipeline {
           export NVM_DIR="$HOME/.nvm"
           . "$NVM_DIR/nvm.sh"
           sam package --s3-bucket "$CI_BUCKET" \
-                      --s3-prefix "${PROJECT}-${GIT_LOCAL_BRANCH}" > artifacts/package/template.yaml
+                      --s3-prefix "${PROJECT}-${BRANCH_NAME}" > artifacts/package/template.yaml
         '''
       }
     }
@@ -163,9 +163,9 @@ pipeline {
           sam deploy --capabilities CAPABILITY_NAMED_IAM CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
                      --no-confirm-changeset \
                      --no-fail-on-empty-changeset \
-                     --s3-prefix "${PROJECT}-${GIT_LOCAL_BRANCH}" \
+                     --s3-prefix "${PROJECT}-${BRANCH_NAME}" \
                      --s3-bucket "$CI_BUCKET" \
-                     --stack-name "${PROJECT}-${GIT_LOCAL_BRANCH}"
+                     --stack-name "${PROJECT}-${BRANCH_NAME}"
         '''
       }
     }
