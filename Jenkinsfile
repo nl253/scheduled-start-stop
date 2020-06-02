@@ -20,13 +20,27 @@ pipeline {
     pollSCM('H/15 * * * *')
   }
   stages {
-    stage('test') {
+    stage('setup') {
       steps {
         sh '''
           apt update
           apt install -y npm
           pip3 install awscli
           pip3 install aws-sam-cli
+          mkdir -p .meta/jenkins
+          if [[ $GIT_LOCAL_BRANCH == master ]]; then
+            echo "$PROJECT" > .meta/jenkins/PROJECT
+          else
+            echo "$PROJECT-${GIT_LOCAL_BRANCH}" > .meta/jenkins/PROJECT
+          fi
+        '''
+      }
+    }
+  }
+  stages {
+    stage('test') {
+      steps {
+        sh '''
           sam validate
         '''
       }
@@ -34,14 +48,9 @@ pipeline {
     stage('build') {
       steps {
         sh '''
-          apt update
-          apt install -y npm
-          pip3 install awscli
-          pip3 install aws-sam-cli
           sam build
-          prefix="${PROJECT}-${GIT_LOCAL_BRANCH}"
           sam package --s3-bucket "$CI_BUCKET" \
-                      --s3-prefix "$prefix"
+                      --s3-prefix "$(cat .meta/jenkins/PROJECT)"
         '''
       }
     }
@@ -53,17 +62,12 @@ pipeline {
       }
       steps {
         sh '''
-          apt update
-          apt install -y npm
-          pip3 install awscli
-          pip3 install aws-sam-cli
-          prefix="${PROJECT}-${GIT_LOCAL_BRANCH}"
           sam deploy --capabilities CAPABILITY_NAMED_IAM CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
                      --no-confirm-changeset \
                      --no-fail-on-empty-changeset \
-                     --s3-prefix "$prefix" \
+                     --s3-prefix "$(cat .meta/jenkins/PROJECT)" \
                      --s3-bucket "$CI_BUCKET" \
-                     --stack-name "${PROJECT}-${GIT_LOCAL_BRANCH}"
+                     --stack-name "$(cat .meta/jenkins/PROJECT)"
         '''
       }
     }
@@ -73,7 +77,7 @@ pipeline {
         sh '''
           pip3 install awscli --upgrade
           mkdir -p build/output
-          aws s3 sync "s3://${CI_BUCKET}/${PROJECT}-${GIT_LOCAL_BRANCH}" build/output
+          aws s3 sync "s3://${CI_BUCKET}/$(cat .meta/jenkins/PROJECT)" build/output
         '''
         archiveArtifacts artifacts: 'build/output/**', fingerprint: true
         deleteDir() /* clean up our workspace */
