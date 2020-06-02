@@ -21,6 +21,11 @@ pipeline {
     pollSCM('H/15 * * * *')
   }
   stages {
+    stage('checkout') {
+      steps {
+        git branch: "$GIT_LOCAL_BRANCH", url: "$GIT_URL"
+      }
+    }
     stage('setup') {
       steps {
         sh '''
