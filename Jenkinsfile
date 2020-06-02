@@ -41,12 +41,6 @@ pipeline {
           # AWS
           pip3 install awscli
           pip3 install aws-sam-cli
-          mkdir -p .meta/jenkins
-          if [[ $GIT_LOCAL_BRANCH == master ]]; then
-            echo "$PROJECT" > .meta/jenkins/PROJECT
-          else
-            echo "$PROJECT-${GIT_LOCAL_BRANCH}" > .meta/jenkins/PROJECT
-          fi
         '''
       }
     }
@@ -88,8 +82,63 @@ pipeline {
           . "$NVM_DIR/nvm.sh"
           sam build
           cp -r .aws-sam/build artifacts/
+        '''
+      }
+    }
+    stage('package-master') {
+      when {
+        allOf {
+          expression {
+            params.CLEANUP_BRANCH.size() == 0
+          }
+          branch 'master'
+        }
+      }
+      steps {
+        sh '''
+          export NVM_DIR="$HOME/.nvm"
+          . "$NVM_DIR/nvm.sh"
           sam package --s3-bucket "$CI_BUCKET" \
-                      --s3-prefix "$(cat .meta/jenkins/PROJECT)" > artifacts/package/template.yaml
+                      --s3-prefix "$PROJECT" > artifacts/package/template.yaml
+        '''
+      }
+    }
+    stage('package') {
+      when {
+        allOf {
+          expression {
+            params.CLEANUP_BRANCH.size() == 0
+          }
+          not {
+            branch 'master'
+          }
+        }
+      }
+      steps {
+        sh '''
+          export NVM_DIR="$HOME/.nvm"
+          . "$NVM_DIR/nvm.sh"
+          sam package --s3-bucket "$CI_BUCKET" \
+                      --s3-prefix "${PROJECT}-${GIT_LOCAL_BRANCH}" > artifacts/package/template.yaml
+        '''
+      }
+    }
+    stage('deploy-master') {
+      when {
+        not {
+          branch 'master'
+        }
+      }
+      steps {
+        sh '''
+          export NVM_DIR="$HOME/.nvm"
+          . "$NVM_DIR/nvm.sh"
+          sam deploy --capabilities CAPABILITY_NAMED_IAM CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
+                     --no-confirm-changeset \
+                     --no-fail-on-empty-changeset \
+                     --s3-prefix "$PROJECT" \
+                     --s3-bucket "$CI_BUCKET" \
+                     --stack-name "$PROJECT"
         '''
       }
     }
@@ -106,9 +155,9 @@ pipeline {
           sam deploy --capabilities CAPABILITY_NAMED_IAM CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
                      --no-confirm-changeset \
                      --no-fail-on-empty-changeset \
-                     --s3-prefix "$(cat .meta/jenkins/PROJECT)" \
+                     --s3-prefix "${PROJECT}-${GIT_LOCAL_BRANCH}" \
                      --s3-bucket "$CI_BUCKET" \
-                     --stack-name "$(cat .meta/jenkins/PROJECT)"
+                     --stack-name "${PROJECT}-${GIT_LOCAL_BRANCH}"
         '''
       }
     }
