@@ -15,6 +15,7 @@ pipeline {
   options {
     timeout(time: 5, unit: 'MINUTES')
     timestamps()
+    disableConcurrentBuilds()
   }
   triggers {
     pollSCM('H/15 * * * *')
@@ -24,7 +25,7 @@ pipeline {
       steps {
         sh '''
           apt update
-          apt install -y npm
+          apt install -y npm git
           pip3 install awscli
           pip3 install aws-sam-cli
           mkdir -p .meta/jenkins
@@ -36,9 +37,24 @@ pipeline {
         '''
       }
     }
-  }
-  stages {
+    stage('cleanup') {
+      when {
+        allOf {
+          changelog '.*Merge branch.*'
+          not {
+            branch 'master'
+          }
+        }
+      }
+      steps {
+        sh '''
+          old_branch=$(git log -1 --format=oneline | sed -E "s/.*Merge branch '[^']*'.*/\\1/")
+          aws cloudformation delete-stack --stack-name "${PROJECT}-${old_branch}"
+        '''
+      }
+    }
     stage('test') {
+      when { not { changelog '.*Merge branch.*' } }
       steps {
         sh '''
           sam validate
@@ -46,6 +62,7 @@ pipeline {
       }
     }
     stage('build') {
+      when { not { changelog '.*Merge branch.*' } }
       steps {
         sh '''
           sam build
@@ -55,6 +72,7 @@ pipeline {
       }
     }
     stage('deploy') {
+      when { not { changelog '.*Merge branch.*' } }
       environment {
         AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID')
         AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
@@ -73,13 +91,15 @@ pipeline {
     }
   }
   post {
-    always {
+    success {
         sh '''
           pip3 install awscli --upgrade
           mkdir -p build/output
           aws s3 sync "s3://${CI_BUCKET}/$(cat .meta/jenkins/PROJECT)" build/output
         '''
         archiveArtifacts artifacts: 'build/output/**', fingerprint: true
+    }
+    cleanup {
         deleteDir() /* clean up our workspace */
     }
   }
