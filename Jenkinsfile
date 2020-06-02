@@ -29,7 +29,7 @@ pipeline {
     stage('setup') {
       steps {
         sh '''
-          mkdir -p /tmp/artifacts/{deploy,test}
+          mkdir -p /tmp/artifacts/{deploy,test,package}
 
           # Node.js
           curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v${NVM_VERSION}/install.sh | bash
