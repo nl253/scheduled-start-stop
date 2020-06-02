@@ -81,7 +81,6 @@ pipeline {
           export NVM_DIR="$HOME/.nvm"
           . "$NVM_DIR/nvm.sh"
           sam build
-          cp -r .aws-sam/build artifacts/
         '''
       }
     }
@@ -99,7 +98,7 @@ pipeline {
           export NVM_DIR="$HOME/.nvm"
           . "$NVM_DIR/nvm.sh"
           sam package --s3-bucket "$CI_BUCKET" \
-                      --s3-prefix "$PROJECT" > artifacts/package/template.yaml
+                      --s3-prefix "$PROJECT"
         '''
       }
     }
@@ -119,7 +118,7 @@ pipeline {
           export NVM_DIR="$HOME/.nvm"
           . "$NVM_DIR/nvm.sh"
           sam package --s3-bucket "$CI_BUCKET" \
-                      --s3-prefix "${PROJECT}-${BRANCH_NAME}" > artifacts/package/template.yaml
+                      --s3-prefix "${PROJECT}-${BRANCH_NAME}"
         '''
       }
     }
@@ -173,8 +172,10 @@ pipeline {
   post {
     success {
         sh '''
-          uri=$(cat artifacts/package/template.yaml | grep -E -o 'CodeUri:.*' | sed -E 's/CodeUri:\\s*//')
-          aws s3 cp "$uri" artifacts/deploy/bundle.zip
+          apt update
+          apt install -y zip
+          zip -r artifacts.zip .
+          aws s3 cp "artifacts.zip" "s3://${CI_BUCKET}/${PROJECT}/${BRANCH_NAME}/artifacts.zip"
         '''
         archiveArtifacts artifacts: 'artifacts/**', fingerprint: true, onlyIfSuccessful: true, excludes: 'artifacts/build/*/node_modules/**'
     }
