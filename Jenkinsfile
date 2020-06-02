@@ -1,5 +1,10 @@
 pipeline {
-  agent { docker { image 'python:3.8' } }
+  agent {
+    docker {
+      image 'python:3.8'
+      args '--user root'
+    }
+  }
   environment {
     AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID')
     AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
@@ -57,16 +62,12 @@ pipeline {
   post {
     always {
         sh '''
+          pip3 install awscli --upgrade
           mkdir -p build/output
           aws s3 sync "s3://${CI_BUCKET}/${PROJECT}-${GIT_LOCAL_BRANCH}" build/output
         '''
         archiveArtifacts artifacts: 'build/output/**', fingerprint: true
         deleteDir() /* clean up our workspace */
-    }
-    failure {
-        mail to: 'norbertlogiewa96@gmail.com',
-             subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
-             body: "Something is wrong with ${env.BUILD_URL}"
     }
   }
 }
