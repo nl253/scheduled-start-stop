@@ -95,11 +95,6 @@ pipeline {
           params.CLEANUP_BRANCH.size() == 0
         }
       }
-      environment {
-        AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID')
-        AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
-        AWS_DEFAULT_REGION    = 'eu-west-2'
-      }
       steps {
         sh '''
           sam deploy --capabilities CAPABILITY_NAMED_IAM CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
