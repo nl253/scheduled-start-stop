@@ -52,7 +52,9 @@ pipeline {
       }
       steps {
         sh '''
-          aws cloudformation delete-stack --stack-name "${PROJECT}-${CLEANUP_BRANCH}"
+          suffix="${PROJECT}-${CLEANUP_BRANCH}"
+          aws cloudformation delete-stack --stack-name "$suffix"
+          aws s3 rm --recursive "s3://${CI_BUCKET}/${suffix}"
         '''
       }
     }
