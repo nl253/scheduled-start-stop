@@ -29,7 +29,7 @@ pipeline {
     stage('setup') {
       steps {
         sh '''
-          mkdir -p /tmp/artifacts/{deploy,test,package}
+          mkdir -p artifacts/{deploy,test,package}
 
           # Node.js
           curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v${NVM_VERSION}/install.sh | bash
@@ -72,7 +72,7 @@ pipeline {
         sh '''
           export NVM_DIR="$HOME/.nvm"
           . "$NVM_DIR/nvm.sh"
-          sam validate > /tmp/artifacts/test/results.txt
+          sam validate > artifacts/test/results.txt
         '''
       }
     }
@@ -87,9 +87,9 @@ pipeline {
           export NVM_DIR="$HOME/.nvm"
           . "$NVM_DIR/nvm.sh"
           sam build
-          cp -r .aws-sam/build /tmp/artifacts/
+          cp -r .aws-sam/build artifacts/
           sam package --s3-bucket "$CI_BUCKET" \
-                      --s3-prefix "$(cat .meta/jenkins/PROJECT)" > /tmp/artifacts/package/template.yaml
+                      --s3-prefix "$(cat .meta/jenkins/PROJECT)" > artifacts/package/template.yaml
         '''
       }
     }
@@ -116,10 +116,10 @@ pipeline {
   post {
     success {
         sh '''
-          uri=$(cat /tmp/artifacts/package/template.yaml | grep -E -o 'CodeUri:.*' | sed -E 's/CodeUri:\\s*//')
-          aws s3 cp "$uri" /tmp/artifacts/deploy/bundle.zip
+          uri=$(cat artifacts/package/template.yaml | grep -E -o 'CodeUri:.*' | sed -E 's/CodeUri:\\s*//')
+          aws s3 cp "$uri" artifacts/deploy/bundle.zip
         '''
-        archiveArtifacts artifacts: '/tmp/artifacts/**', fingerprint: true
+        archiveArtifacts artifacts: 'artifacts/**', fingerprint: true
     }
     cleanup {
         deleteDir() /* clean up our workspace */
