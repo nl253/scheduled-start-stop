@@ -15,7 +15,7 @@ pipeline {
     NVM_VERSION           = '0.35.3'
   }
   options {
-    timeout(time: 15, unit: 'MINUTES')
+    timeout(time: 20, unit: 'MINUTES')
     timestamps()
     disableConcurrentBuilds()
   }
@@ -125,7 +125,10 @@ pipeline {
     }
     stage('deploy-master') {
       when {
-        not {
+        allOf {
+          expression {
+            params.CLEANUP_BRANCH.size() == 0
+          }
           branch 'master'
         }
       }
@@ -144,8 +147,13 @@ pipeline {
     }
     stage('deploy') {
       when {
-        expression {
-          params.CLEANUP_BRANCH.size() == 0
+        allOf {
+          expression {
+            params.CLEANUP_BRANCH.size() == 0
+          }
+          not {
+            branch 'master'
+          }
         }
       }
       steps {
