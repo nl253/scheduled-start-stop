@@ -70,6 +70,8 @@ pipeline {
       }
       steps {
         sh '''
+          export NVM_DIR="$HOME/.nvm"
+          . "$NVM_DIR/nvm.sh"
           sam validate > /tmp/artifacts/test/results.txt
         '''
       }
@@ -82,6 +84,8 @@ pipeline {
       }
       steps {
         sh '''
+          export NVM_DIR="$HOME/.nvm"
+          . "$NVM_DIR/nvm.sh"
           sam build
           cp -r .aws-sam/build /tmp/artifacts/
           sam package --s3-bucket "$CI_BUCKET" \
@@ -97,6 +101,8 @@ pipeline {
       }
       steps {
         sh '''
+          export NVM_DIR="$HOME/.nvm"
+          . "$NVM_DIR/nvm.sh"
           sam deploy --capabilities CAPABILITY_NAMED_IAM CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
                      --no-confirm-changeset \
                      --no-fail-on-empty-changeset \
