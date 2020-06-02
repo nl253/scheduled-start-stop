@@ -177,7 +177,7 @@ pipeline {
           apt update
           apt install -y zip
           zip -r artifacts.zip .
-          aws s3 cp --storage-class STANDARD_IA --content-encoding deflate "artifacts.zip" "s3://${CI_BUCKET}/${PROJECT}/${BRANCH_NAME}/${GIT_COMMIT}.zip"
+          aws s3 cp --storage-class STANDARD_IA "artifacts.zip" "s3://${CI_BUCKET}/${PROJECT}/${BRANCH_NAME}/${GIT_COMMIT}.zip"
         '''
         archiveArtifacts artifacts: 'artifacts/**', fingerprint: true, onlyIfSuccessful: true, excludes: 'artifacts/build/*/node_modules/**'
     }
