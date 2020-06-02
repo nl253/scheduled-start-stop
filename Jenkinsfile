@@ -23,7 +23,7 @@ pipeline {
   stages {
     stage('checkout') {
       steps {
-        git branch: "${env.GIT_LOCAL_BRANCH}", url: "${env.GIT_URL}"
+        git branch: "${env.GIT_BRANCH}", url: "${env.GIT_URL}"
       }
     }
     stage('setup') {
