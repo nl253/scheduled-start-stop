@@ -176,7 +176,7 @@ pipeline {
           uri=$(cat artifacts/package/template.yaml | grep -E -o 'CodeUri:.*' | sed -E 's/CodeUri:\\s*//')
           aws s3 cp "$uri" artifacts/deploy/bundle.zip
         '''
-        archiveArtifacts artifacts: 'artifacts/**', fingerprint: true
+        archiveArtifacts artifacts: 'artifacts/**', fingerprint: true, onlyIfSuccessful: true, excludes: 'artifacts/build/*/node_modules/**'
     }
     cleanup {
         deleteDir() /* clean up our workspace */
