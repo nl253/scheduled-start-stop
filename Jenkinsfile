@@ -15,12 +15,12 @@ pipeline {
     NVM_VERSION           = '0.35.3'
   }
   options {
-    timeout(time: 5, unit: 'MINUTES')
+    timeout(time: 15, unit: 'MINUTES')
     timestamps()
     disableConcurrentBuilds()
   }
   triggers {
-    pollSCM('H/15 * * * *')
+    pollSCM('H/5 * * * *')
   }
   parameters {
     string(name: 'CLEANUP_BRANCH', defaultValue: '', description: 'Branch which should be cleaned up.')
@@ -29,7 +29,7 @@ pipeline {
     stage('setup') {
       steps {
         sh '''
-          mkdir -p /tmp/artifacts/deploy
+          mkdir -p /tmp/artifacts/{deploy,test}
 
           # Node.js
           curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v${NVM_VERSION}/install.sh | bash
@@ -70,7 +70,7 @@ pipeline {
       }
       steps {
         sh '''
-          sam validate
+          sam validate > /tmp/artifacts/test/results.txt
         '''
       }
     }
