@@ -25,8 +25,8 @@ pipeline {
         sh '''
           apt update
           apt install -y npm
-          pip3 install awscli --upgrade
-          pip3 install aws-sam-cli --upgrade
+          pip3 install awscli
+          pip3 install aws-sam-cli
           sam validate
         '''
       }
@@ -34,6 +34,10 @@ pipeline {
     stage('build') {
       steps {
         sh '''
+          apt update
+          apt install -y npm
+          pip3 install awscli
+          pip3 install aws-sam-cli
           sam build
           prefix="${PROJECT}-${GIT_LOCAL_BRANCH}"
           bucket=$CI_BUCKET
@@ -50,6 +54,10 @@ pipeline {
       }
       steps {
         sh '''
+          apt update
+          apt install -y npm
+          pip3 install awscli
+          pip3 install aws-sam-cli
           sam deploy --capabilities CAPABILITY_NAMED_IAM CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
                      --no-confirm-changeset \
                      --no-fail-on-empty-changeset \
@@ -63,7 +71,7 @@ pipeline {
   post {
     always {
         sh '''
-          pip3 install awscli --upgrade
+          pip3 install awscli
           mkdir -p build/output
           aws s3 sync "s3://${CI_BUCKET}/${PROJECT}-${GIT_LOCAL_BRANCH}" build/output
         '''
