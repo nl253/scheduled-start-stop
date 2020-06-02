@@ -52,7 +52,7 @@ pipeline {
       }
       steps {
         sh '''
-          suffix="${PROJECT}-${CLEANUP_BRANCH}"
+          suffix="${PROJECT}/${CLEANUP_BRANCH}"
           aws cloudformation delete-stack --stack-name "$suffix"
           aws s3 rm --recursive "s3://${CI_BUCKET}/${suffix}"
         '''
@@ -120,7 +120,7 @@ pipeline {
           export NVM_DIR="$HOME/.nvm"
           . "$NVM_DIR/nvm.sh"
           sam package --s3-bucket "$CI_BUCKET" \
-                      --s3-prefix "${PROJECT}-${BRANCH_NAME}"
+                      --s3-prefix "${PROJECT}/${BRANCH_NAME}"
         '''
       }
     }
@@ -164,7 +164,7 @@ pipeline {
           sam deploy --capabilities CAPABILITY_NAMED_IAM CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
                      --no-confirm-changeset \
                      --no-fail-on-empty-changeset \
-                     --s3-prefix "${PROJECT}-${BRANCH_NAME}" \
+                     --s3-prefix "${PROJECT}/${BRANCH_NAME}" \
                      --s3-bucket "$CI_BUCKET" \
                      --stack-name "${PROJECT}-${BRANCH_NAME}"
         '''
