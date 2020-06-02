@@ -11,6 +11,8 @@ pipeline {
     AWS_DEFAULT_REGION    = 'eu-west-2'
     CI_BUCKET             = 'codebuild-nl'
     PROJECT               = 'scheduled-start-stop'
+    NODE_VERSION          = '12'
+    NVM_VERSION           = '0.35.3'
   }
   options {
     timeout(time: 5, unit: 'MINUTES')
@@ -20,17 +22,23 @@ pipeline {
   triggers {
     pollSCM('H/15 * * * *')
   }
+  parameters {
+    string(name: 'CLEANUP_BRANCH', defaultValue: '', description: 'Branch which should be cleaned up.')
+  }
   stages {
-    stage('checkout') {
-      steps {
-        git branch: "${env.GIT_BRANCH}", url: "${env.GIT_URL}"
-      }
-    }
     stage('setup') {
       steps {
         sh '''
-          apt update
-          apt install -y npm git
+          mkdir -p /tmp/artifacts/deploy
+
+          # Node.js
+          curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v${NVM_VERSION}/install.sh | bash
+          export NVM_DIR="$HOME/.nvm"
+          . "$NVM_DIR/nvm.sh"
+          nvm install "$NODE_VERSION"
+          nvm use "$NODE_VERSION"
+
+          # AWS
           pip3 install awscli
           pip3 install aws-sam-cli
           mkdir -p .meta/jenkins
@@ -44,22 +52,22 @@ pipeline {
     }
     stage('cleanup') {
       when {
-        allOf {
-          changelog '.*Merge branch.*'
-          not {
-            branch 'master'
-          }
+        expression {
+          params.CLEANUP_BRANCH.size() > 0
         }
       }
       steps {
         sh '''
-          old_branch=$(git log -1 --format=oneline | sed -E "s/.*Merge branch '[^']*'.*/\\1/")
-          aws cloudformation delete-stack --stack-name "${PROJECT}-${old_branch}"
+          aws cloudformation delete-stack --stack-name "${PROJECT}-${CLEANUP_BRANCH}"
         '''
       }
     }
     stage('test') {
-      when { not { changelog '.*Merge branch.*' } }
+      when {
+        expression {
+          params.CLEANUP_BRANCH.size() == 0
+        }
+      }
       steps {
         sh '''
           sam validate
@@ -67,17 +75,26 @@ pipeline {
       }
     }
     stage('build') {
-      when { not { changelog '.*Merge branch.*' } }
+      when {
+        expression {
+          params.CLEANUP_BRANCH.size() == 0
+        }
+      }
       steps {
         sh '''
           sam build
+          cp -r .aws-sam/build /tmp/artifacts/
           sam package --s3-bucket "$CI_BUCKET" \
-                      --s3-prefix "$(cat .meta/jenkins/PROJECT)"
+                      --s3-prefix "$(cat .meta/jenkins/PROJECT)" > /tmp/artifacts/package/template.yaml
         '''
       }
     }
     stage('deploy') {
-      when { not { changelog '.*Merge branch.*' } }
+      when {
+        expression {
+          params.CLEANUP_BRANCH.size() == 0
+        }
+      }
       environment {
         AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID')
         AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
@@ -98,11 +115,10 @@ pipeline {
   post {
     success {
         sh '''
-          pip3 install awscli --upgrade
-          mkdir -p build/output
-          aws s3 sync "s3://${CI_BUCKET}/$(cat .meta/jenkins/PROJECT)" build/output
+          uri=$(cat /tmp/artifacts/package/template.yaml | grep -E -o 'CodeUri:.*' | sed -E 's/CodeUri:\\s*//')
+          aws s3 cp "$uri" /tmp/artifacts/deploy/bundle.zip
         '''
-        archiveArtifacts artifacts: 'build/output/**', fingerprint: true
+        archiveArtifacts artifacts: '/tmp/artifacts/**', fingerprint: true
     }
     cleanup {
         deleteDir() /* clean up our workspace */

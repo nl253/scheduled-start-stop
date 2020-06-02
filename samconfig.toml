@@ -4,8 +4,5 @@ version = 0.1
 [default.deploy.parameters]
 stack_name = "scheduled-start-stop"
 s3_bucket = "codebuild-nl"
-s3_prefix = "scheduled-start-stop-dev"
 region = "eu-west-2"
 confirm_changeset = false
-capabilities = "CAPABILITY_IAM"
-parameter_overrides = "CronSpec=\"cron(0 * * * ? *)\" FuncRuntime=\"nodejs12.x\" FuncRoleName=\"start-stop-ec2\" FuncTimeout=\"30\" FuncMemory=\"128\" FuncTracing=\"Active\""
