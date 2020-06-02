@@ -23,6 +23,7 @@ pipeline {
     stage('test') {
       steps {
         sh '''
+          apt update
           apt install -y npm
           pip3 install awscli --upgrade
           pip3 install aws-sam-cli --upgrade
